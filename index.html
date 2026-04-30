@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abe's Baking — Fresh-baked weekly in Yarmouth, Maine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream:       #F5EFE0;
+      --cream-dark:  #EDE5D0;
+      --navy:        #2D3F6B;
+      --navy-light:  #3D5080;
+      --navy-dark:   #1E2D4F;
+      --text-main:   #1E2D4F;
+      --text-muted:  #5A6B88;
+      --white:       #FFFFFF;
+      --danger:      #B04040;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--cream);
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy-dark);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      height: 48px;
+      width: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--cream);
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: rgba(245, 239, 224, 0.5);
+      font-weight: 300;
+      letter-spacing: 0.07em;
+      margin-top: 0.15rem;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+    }
+
+    nav a {
+      color: rgba(245, 239, 224, 0.7);
+      text-decoration: none;
+      font-size: 0.875rem;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--cream); }
+
+    /* ── Announcement bar ── */
+    .announcement {
+      background: var(--navy);
+      color: rgba(245, 239, 224, 0.9);
+      text-align: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ── Admin mode banner ── */
+    .admin-mode-banner {
+      background: #2a5f2a;
+      color: #fff;
+      text-align: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      display: none;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 4.5rem;
+    }
+
+    /* ── Section titles ── */
+    .section-heading {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--navy-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .section-sub {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Product grid ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 1.75rem;
+    }
+
+    /* ── Product card ── */
+    .product-card {
+      background: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(30, 45, 79, 0.08);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .product-card:not(.sold-out):hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(30, 45, 79, 0.14);
+    }
+
+    .product-card.sold-out {
+      filter: saturate(0.35);
+      opacity: 0.72;
+    }
+
+    .product-image-wrap {
+      width: 100%;
+      height: 200px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .product-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .product-image-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.75rem;
+    }
+
+    .product-body {
+      padding: 1.2rem 1.4rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--navy-dark);
+      line-height: 1.25;
+    }
+
+    .product-price {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy);
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .product-desc {
+      font-size: 0.865rem;
+      color: var(--text-muted);
+      line-height: 1.62;
+      flex: 1;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-order {
+      display: block;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: var(--navy);
+      color: var(--white);
+      text-decoration: none;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: auto;
+    }
+
+    .btn-order:hover  { background: var(--navy-light); }
+    .btn-order:active { transform: scale(0.98); }
+
+    .badge-sold-out {
+      display: inline-block;
+      background: #D6D9E2;
+      color: #5A6378;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      margin-top: auto;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      border: none;
+      border-top: 2px solid var(--cream-dark);
+      margin: 4rem 0;
+    }
+
+    /* ── About section ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .about-text .section-heading { margin-bottom: 1rem; }
+
+    .about-text p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 0.9rem;
+    }
+
+    .about-details {
+      list-style: none;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .about-details li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .about-details .di { flex-shrink: 0; font-size: 1rem; margin-top: 0.05rem; }
+
+    .about-details a { color: var(--navy); text-decoration: none; }
+    .about-details a:hover { text-decoration: underline; }
+
+    .about-card {
+      background: var(--cream-dark);
+      border-radius: 16px;
+      padding: 2.5rem 1.75rem;
+      text-align: center;
+    }
+
+    .about-card-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 1.25rem;
+    }
+
+    .about-card-quote {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--navy);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .about-card-tag {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── Empty state ── */
+    .products-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--navy-dark);
+      color: rgba(245, 239, 224, 0.4);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+    }
+
+    footer a { color: rgba(245, 239, 224, 0.65); text-decoration: none; }
+    footer a:hover { color: var(--cream); }
+
+    /* ════════════════════════════════════════
+       ADMIN PANEL
+    ════════════════════════════════════════ */
+    #admin-panel {
+      display: none;
+      background: var(--white);
+      border-bottom: 3px solid var(--navy);
+    }
+
+    .admin-top-bar {
+      background: var(--navy-dark);
+      color: var(--cream);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .admin-top-bar h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .admin-top-bar p {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      margin-top: 0.1rem;
+    }
+
+    .admin-toolbar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-toolbar button,
+    .admin-toolbar a {
+      padding: 0.5rem 1rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .admin-toolbar button:hover,
+    .admin-toolbar a:hover { opacity: 0.82; }
+
+    .btn-admin-add    { background: #2a7a2a; color: #fff; }
+    .btn-admin-save   { background: var(--navy); color: #fff; }
+    .btn-admin-export { background: #555; color: #fff; }
+    .btn-admin-exit   { background: rgba(255,255,255,0.15); color: var(--cream); }
+
+    .admin-products-list {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .admin-product-card {
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      padding: 1.25rem 1.4rem;
+      background: #FAFAFA;
+      position: relative;
+    }
+
+    .admin-product-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .admin-product-card-header span {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .btn-delete-product {
+      background: none;
+      border: 1.5px solid #c44;
+      color: #c44;
+      border-radius: 6px;
+      padding: 0.25rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-delete-product:hover { background: #c44; color: #fff; }
+
+    .admin-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem 1.25rem;
+    }
+
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .admin-field.full-width { grid-column: 1 / -1; }
+
+    .admin-field label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .admin-field input[type="text"],
+    .admin-field input[type="url"],
+    .admin-field textarea {
+      padding: 0.5rem 0.75rem;
+      border: 1.5px solid #D8DCE8;
+      border-radius: 7px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text-main);
+      background: var(--white);
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+
+    .admin-field input:focus,
+    .admin-field textarea:focus {
+      outline: none;
+      border-color: var(--navy);
+    }
+
+    .admin-field textarea { min-height: 70px; }
+
+    .admin-field-instock {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 1.4rem;
+    }
+
+    .admin-field-instock input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--navy);
+    }
+
+    .admin-field-instock label {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .admin-save-notice {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: #2a7a2a;
+      font-weight: 700;
+      display: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 780px) {
+      .about-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .admin-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-field.full-width { grid-column: 1; }
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 0.9rem 1.25rem; }
+
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .brand-text h1 { font-size: 1.5rem; }
+
+      nav { gap: 1.25rem; }
+
+      main { padding: 2.5rem 1rem 3.5rem; }
+
+      .section-heading { font-size: 1.7rem; }
+
+      .products-grid { grid-template-columns: 1fr; }
+
+      .admin-top-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin panel (shown only when ?admin is in the URL) -->
+  <div id="admin-panel">
+    <div class="admin-top-bar">
+      <div>
+        <h2>✏️ Menu Editor</h2>
+        <p>Changes are saved to your browser. Use "Export products.js" to save a permanent backup file.</p>
+      </div>
+      <div class="admin-toolbar">
+        <button class="btn-admin-add" id="btn-add-product">+ Add Item</button>
+        <button class="btn-admin-save" id="btn-save-products">Save Changes</button>
+        <button class="btn-admin-export" id="btn-export-products">Export products.js</button>
+        <a class="btn-admin-exit" href="?">← Exit Admin</a>
+      </div>
+    </div>
+    <div class="admin-products-list" id="admin-products-list"></div>
+    <div class="admin-save-notice" id="admin-save-notice">✓ Menu saved!</div>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="logo.png" alt="Abe's Baking logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Abe's Baking</h1>
+          <p>Fresh-baked weekly in Yarmouth, Maine</p>
+        </div>
+      </div>
+      <nav>
+        <a href="#about">About</a>
+        <a href="https://instagram.com/abesbaking" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+          @abesbaking
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="announcement">
+    Orders placed weekly &mdash; pickup in Yarmouth, ME
+  </div>
+
+  <main>
+    <section id="menu" aria-labelledby="menu-title">
+      <h2 class="section-heading" id="menu-title">This Week's Menu</h2>
+      <p class="section-sub">Made to order in small batches. Order by Friday for weekend pickup.</p>
+      <div class="products-grid" id="products-grid" role="list"></div>
+    </section>
+
+    <hr class="section-divider" aria-hidden="true">
+
+    <section id="about" aria-labelledby="about-title">
+      <div class="about-grid">
+        <div class="about-text">
+          <h2 class="section-heading" id="about-title">About the Bakery</h2>
+          <p>Hi, I'm Abe — I bake out of my home kitchen in Yarmouth, Maine. Every item is made from scratch in small batches, once a week, with ingredients I care about.</p>
+          <p>There's no storefront. You browse the menu above, click the item you want, and Stripe handles the payment. Then we coordinate a pickup time right here in Yarmouth.</p>
+          <ul class="about-details">
+            <li>
+              <span class="di">📍</span>
+              <span>Pickup in Yarmouth, Maine — address shared after ordering</span>
+            </li>
+            <li>
+              <span class="di">📅</span>
+              <span>Menu refreshes weekly. Follow <a href="https://instagram.com/abesbaking" target="_blank" rel="noopener noreferrer">@abesbaking</a> for sneak peeks</span>
+            </li>
+            <li>
+              <span class="di">💬</span>
+              <span>Questions? Send a DM on Instagram</span>
+            </li>
+            <li>
+              <span class="di">⚠️</span>
+              <span>Baked in a home kitchen that handles wheat, eggs, dairy, and tree nuts</span>
+            </li>
+          </ul>
+        </div>
+        <div class="about-card" aria-hidden="true">
+          <img src="logo.png" alt="" class="about-card-logo">
+          <p class="about-card-quote">"Made with time, care, and good flour."</p>
+          <p class="about-card-tag">Small-batch &bull; Home-baked &bull; Yarmouth, ME</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      &copy; <span id="footer-year"></span> Abe's Baking &mdash; Yarmouth, Maine
+      &mdash; <a href="https://instagram.com/abesbaking" target="_blank" rel="noopener noreferrer">@abesbaking</a>
+    </p>
+  </footer>
+
+  <script src="products.js"></script>
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    // ── Product data: localStorage overrides products.js ──────────────────
+    var STORAGE_KEY = 'abes_baking_products';
+
+    function getProducts() {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try { return JSON.parse(stored); } catch(e) {}
+      }
+      return (typeof products !== 'undefined' && Array.isArray(products)) ? products : [];
+    }
+
+    function saveProducts(prods) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(prods));
+    }
+
+    // ── Render storefront ─────────────────────────────────────────────────
+    function renderStorefront() {
+      var grid = document.getElementById('products-grid');
+      grid.innerHTML = '';
+      var prods = getProducts();
+
+      if (!prods.length) {
+        var empty = document.createElement('p');
+        empty.className = 'products-empty';
+        empty.textContent = 'No items this week — check back soon or follow @abesbaking for updates.';
+        grid.appendChild(empty);
+        return;
+      }
+
+      prods.forEach(function(product) {
+        var article = document.createElement('article');
+        article.className = product.inStock ? 'product-card' : 'product-card sold-out';
+        article.setAttribute('role', 'listitem');
+
+        var imageWrap = document.createElement('div');
+        imageWrap.className = 'product-image-wrap';
+
+        if (product.imageUrl) {
+          var img = document.createElement('img');
+          img.src = product.imageUrl;
+          img.alt = product.name;
+          img.loading = 'lazy';
+          imageWrap.appendChild(img);
+        } else {
+          var ph = document.createElement('div');
+          ph.className = 'product-image-placeholder';
+          ph.setAttribute('aria-hidden', 'true');
+          ph.textContent = '🍞';
+          imageWrap.appendChild(ph);
+        }
+
+        var body = document.createElement('div');
+        body.className = 'product-body';
+
+        var meta = document.createElement('div');
+        meta.className = 'product-meta';
+
+        var nameEl = document.createElement('h3');
+        nameEl.className = 'product-name';
+        nameEl.textContent = product.name;
+
+        var priceEl = document.createElement('span');
+        priceEl.className = 'product-price';
+        priceEl.textContent = product.price;
+
+        meta.appendChild(nameEl);
+        meta.appendChild(priceEl);
+
+        var desc = document.createElement('p');
+        desc.className = 'product-desc';
+        desc.textContent = product.description;
+
+        body.appendChild(meta);
+        body.appendChild(desc);
+
+        if (product.inStock) {
+          var btn = document.createElement('a');
+          btn.href = product.stripeLink;
+          btn.target = '_blank';
+          btn.rel = 'noopener noreferrer';
+          btn.className = 'btn-order';
+          btn.textContent = 'Order Now';
+          body.appendChild(btn);
+        } else {
+          var badge = document.createElement('span');
+          badge.className = 'badge-sold-out';
+          badge.textContent = 'Sold Out';
+          body.appendChild(badge);
+        }
+
+        article.appendChild(imageWrap);
+        article.appendChild(body);
+        grid.appendChild(article);
+      });
+    }
+
+    // ── Admin panel ───────────────────────────────────────────────────────
+    var isAdmin = new URLSearchParams(window.location.search).has('admin');
+
+    function buildAdminPanel() {
+      var panel = document.getElementById('admin-panel');
+      panel.style.display = 'block';
+
+      renderAdminList(getProducts());
+
+      document.getElementById('btn-add-product').addEventListener('click', function() {
+        var prods = readAdminForm();
+        prods.push({ name: '', description: '', price: '$6.99', stripeLink: '', inStock: true, imageUrl: '' });
+        renderAdminList(prods);
+        // scroll to bottom of admin list
+        var list = document.getElementById('admin-products-list');
+        list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      document.getElementById('btn-save-products').addEventListener('click', function() {
+        var prods = readAdminForm();
+        saveProducts(prods);
+        renderStorefront();
+        var notice = document.getElementById('admin-save-notice');
+        notice.style.display = 'block';
+        setTimeout(function() { notice.style.display = 'none'; }, 2500);
+      });
+
+      document.getElementById('btn-export-products').addEventListener('click', function() {
+        var prods = readAdminForm();
+        var lines = [
+          '// products.js — edit via the admin panel at yoursite.com?admin',
+          '//',
+          '// Fields: name, description, price, stripeLink, inStock (true/false), imageUrl (optional)',
+          '',
+          'const products = ' + JSON.stringify(prods, null, 2) + ';'
+        ];
+        var blob = new Blob([lines.join('\n')], { type: 'text/javascript' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'products.js';
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+      });
+    }
+
+    function renderAdminList(prods) {
+      var list = document.getElementById('admin-products-list');
+      list.innerHTML = '';
+
+      prods.forEach(function(product, i) {
+        var card = document.createElement('div');
+        card.className = 'admin-product-card';
+        card.setAttribute('data-index', i);
+
+        card.innerHTML =
+          '<div class="admin-product-card-header">' +
+            '<span>Item ' + (i + 1) + '</span>' +
+            '<button class="btn-delete-product" data-index="' + i + '">Delete</button>' +
+          '</div>' +
+          '<div class="admin-fields">' +
+            '<div class="admin-field">' +
+              '<label>Name</label>' +
+              '<input type="text" name="name" placeholder="e.g. Sourdough Boule" value="' + esc(product.name) + '">' +
+            '</div>' +
+            '<div class="admin-field">' +
+              '<label>Price</label>' +
+              '<input type="text" name="price" placeholder="$6.99" value="' + esc(product.price) + '">' +
+            '</div>' +
+            '<div class="admin-field full-width">' +
+              '<label>Description</label>' +
+              '<textarea name="description" placeholder="A short description of this item...">' + escText(product.description) + '</textarea>' +
+            '</div>' +
+            '<div class="admin-field full-width">' +
+              '<label>Stripe Payment Link</label>' +
+              '<input type="url" name="stripeLink" placeholder="https://buy.stripe.com/..." value="' + esc(product.stripeLink) + '">' +
+            '</div>' +
+            '<div class="admin-field">' +
+              '<label>Image URL (optional)</label>' +
+              '<input type="url" name="imageUrl" placeholder="https://..." value="' + esc(product.imageUrl || '') + '">' +
+            '</div>' +
+            '<div class="admin-field admin-field-instock">' +
+              '<input type="checkbox" name="inStock" id="instock-' + i + '"' + (product.inStock ? ' checked' : '') + '>' +
+              '<label for="instock-' + i + '">In Stock</label>' +
+            '</div>' +
+          '</div>';
+
+        list.appendChild(card);
+
+        card.querySelector('.btn-delete-product').addEventListener('click', function() {
+          if (confirm('Delete "' + (product.name || 'this item') + '"?')) {
+            var current = readAdminForm();
+            current.splice(i, 1);
+            renderAdminList(current);
+          }
+        });
+      });
+    }
+
+    function readAdminForm() {
+      var cards = document.querySelectorAll('.admin-product-card');
+      var prods = [];
+      cards.forEach(function(card) {
+        prods.push({
+          name:        card.querySelector('[name="name"]').value.trim(),
+          description: card.querySelector('[name="description"]').value.trim(),
+          price:       card.querySelector('[name="price"]').value.trim() || '$6.99',
+          stripeLink:  card.querySelector('[name="stripeLink"]').value.trim(),
+          inStock:     card.querySelector('[name="inStock"]').checked,
+          imageUrl:    card.querySelector('[name="imageUrl"]').value.trim()
+        });
+      });
+      return prods;
+    }
+
+    function esc(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function escText(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    if (isAdmin) {
+      buildAdminPanel();
+    }
+
+    renderStorefront();
+  </script>
+
+</body>
+</html>
