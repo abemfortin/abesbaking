@@ -356,6 +356,97 @@
       font-style: italic;
     }
 
+    /* ── Shop closed banner ── */
+    .shop-closed-banner {
+      display: none;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: var(--white);
+      border-radius: 14px;
+      box-shadow: 0 2px 16px rgba(30, 45, 79, 0.08);
+    }
+
+    .shop-closed-banner .closed-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .shop-closed-banner h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.4rem;
+      color: var(--navy-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .shop-closed-banner p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .shop-closed-banner a {
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .shop-closed-banner a:hover { text-decoration: underline; }
+
+    /* ── Admin shop status toggle ── */
+    .admin-shop-status {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 0;
+    }
+
+    .admin-shop-status-card {
+      background: #f0f4ff;
+      border: 1.5px solid #c0cadf;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-shop-status-card .status-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .admin-shop-status-card .status-label strong {
+      font-size: 0.9rem;
+      color: var(--navy-dark);
+    }
+
+    .admin-shop-status-card .status-label span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+    }
+
+    .toggle-wrap input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--navy);
+    }
+
+    .toggle-wrap label {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--navy-dark);
+      cursor: pointer;
+    }
+
     /* ── Footer ── */
     footer {
       background: var(--navy-dark);
@@ -606,6 +697,18 @@
         <a class="btn-admin-exit" href="?">← Exit Admin</a>
       </div>
     </div>
+    <div class="admin-shop-status">
+      <div class="admin-shop-status-card">
+        <div class="status-label">
+          <strong>Shop Status</strong>
+          <span>When closed, the menu is hidden and visitors see a "check back later" message.</span>
+        </div>
+        <div class="toggle-wrap">
+          <input type="checkbox" id="shop-closed-toggle">
+          <label for="shop-closed-toggle">Shop Closed</label>
+        </div>
+      </div>
+    </div>
     <div class="admin-products-list" id="admin-products-list"></div>
     <div class="admin-save-notice" id="admin-save-notice">✓ Menu saved!</div>
   </div>
@@ -641,6 +744,11 @@
     <section id="menu" aria-labelledby="menu-title">
       <h2 class="section-heading" id="menu-title">This Week's Menu</h2>
       <p class="section-sub">Made to order in small batches. Order by Friday for weekend pickup.</p>
+      <div class="shop-closed-banner" id="shop-closed-banner">
+        <span class="closed-icon">🍞</span>
+        <h3>Not taking orders right now</h3>
+        <p>Check back soon — or follow <a href="https://instagram.com/abesbaking" target="_blank" rel="noopener noreferrer">@abesbaking</a> for updates.</p>
+      </div>
       <div class="products-grid" id="products-grid" role="list"></div>
     </section>
 
@@ -673,8 +781,7 @@
         </div>
         <div class="about-card" aria-hidden="true">
           <img src="logo.png" alt="" class="about-card-logo">
-          <p class="about-card-quote">"Made with time, care, and good flour."</p>
-          <p class="about-card-tag">Small-batch &bull; Home-baked &bull; Yarmouth, ME</p>
+<p class="about-card-tag">Small-batch &bull; Home-baked &bull; Yarmouth, ME</p>
         </div>
       </div>
     </section>
@@ -692,7 +799,8 @@
     document.getElementById('footer-year').textContent = new Date().getFullYear();
 
     // ── Product data: localStorage overrides products.js ──────────────────
-    var STORAGE_KEY = 'abes_baking_products';
+    var STORAGE_KEY        = 'abes_baking_products';
+    var STORAGE_KEY_CLOSED = 'abes_baking_closed';
 
     function getProducts() {
       var stored = localStorage.getItem(STORAGE_KEY);
@@ -706,10 +814,28 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prods));
     }
 
+    function getShopClosed() {
+      return localStorage.getItem(STORAGE_KEY_CLOSED) === 'true';
+    }
+
+    function saveShopClosed(val) {
+      localStorage.setItem(STORAGE_KEY_CLOSED, val ? 'true' : 'false');
+    }
+
     // ── Render storefront ─────────────────────────────────────────────────
     function renderStorefront() {
-      var grid = document.getElementById('products-grid');
+      var grid   = document.getElementById('products-grid');
+      var banner = document.getElementById('shop-closed-banner');
       grid.innerHTML = '';
+
+      if (getShopClosed()) {
+        banner.style.display = 'block';
+        grid.style.display   = 'none';
+        return;
+      }
+
+      banner.style.display = 'none';
+      grid.style.display   = '';
       var prods = getProducts();
 
       if (!prods.length) {
@@ -793,6 +919,14 @@
     function buildAdminPanel() {
       var panel = document.getElementById('admin-panel');
       panel.style.display = 'block';
+
+      // Reflect saved closed state in the toggle
+      var toggle = document.getElementById('shop-closed-toggle');
+      toggle.checked = getShopClosed();
+      toggle.addEventListener('change', function() {
+        saveShopClosed(this.checked);
+        renderStorefront();
+      });
 
       renderAdminList(getProducts());
 
