@@ -639,10 +639,81 @@
       text-align: center;
       padding: 1rem;
       font-size: 0.85rem;
-      color: #2a7a2a;
       font-weight: 700;
       display: none;
     }
+
+    .admin-save-notice.success { color: #2a7a2a; }
+    .admin-save-notice.error   { color: #b04040; }
+
+    /* ── Token setup card ── */
+    .token-setup-card {
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 12px;
+      padding: 1.75rem 1.75rem 1.5rem;
+      background: #FAFAFA;
+    }
+
+    .token-setup-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--navy-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .token-setup-card > p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+
+    .token-instructions {
+      background: var(--cream);
+      border-radius: 8px;
+      padding: 1rem 1rem 1rem 2rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .token-instructions a { color: var(--navy); }
+
+    .token-input-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .token-input-row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid #D8DCE8;
+      border-radius: 7px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text-main);
+    }
+
+    .token-input-row input:focus {
+      outline: none;
+      border-color: var(--navy);
+    }
+
+    .token-change-link {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .token-change-link:hover { text-decoration: underline; color: var(--navy); }
 
     /* ── Responsive ── */
     @media (max-width: 780px) {
@@ -688,7 +759,7 @@
     <div class="admin-top-bar">
       <div>
         <h2>✏️ Menu Editor</h2>
-        <p>Changes are saved to your browser. Use "Export products.js" to save a permanent backup file.</p>
+        <p>Changes push directly to GitHub — all visitors see updates within ~1 minute.</p>
       </div>
       <div class="admin-toolbar">
         <button class="btn-admin-add" id="btn-add-product">+ Add Item</button>
@@ -794,28 +865,65 @@
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
 
-    // ── Product data: localStorage overrides products.js ──────────────────
     var STORAGE_KEY        = 'abes_baking_products';
     var STORAGE_KEY_CLOSED = 'abes_baking_closed';
+    var STORAGE_KEY_TOKEN  = 'abes_baking_gh_token';
+    var REPO_API = 'https://api.github.com/repos/abemfortin/abesbaking/contents/products.js';
 
+    // ── Data accessors ────────────────────────────────────────────────────
     function getProducts() {
       var stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try { return JSON.parse(stored); } catch(e) {}
-      }
+      if (stored) { try { return JSON.parse(stored); } catch(e) {} }
       return (typeof products !== 'undefined' && Array.isArray(products)) ? products : [];
     }
 
-    function saveProducts(prods) {
+    function saveProductsLocal(prods) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prods));
     }
 
     function getShopClosed() {
-      return localStorage.getItem(STORAGE_KEY_CLOSED) === 'true';
+      var stored = localStorage.getItem(STORAGE_KEY_CLOSED);
+      if (stored !== null) return stored === 'true';
+      return (typeof shopClosed !== 'undefined') ? shopClosed : false;
     }
 
-    function saveShopClosed(val) {
+    function saveShopClosedLocal(val) {
       localStorage.setItem(STORAGE_KEY_CLOSED, val ? 'true' : 'false');
+    }
+
+    function getGithubToken() { return localStorage.getItem(STORAGE_KEY_TOKEN) || ''; }
+    function saveGithubToken(t) { localStorage.setItem(STORAGE_KEY_TOKEN, t.trim()); }
+    function clearGithubToken() { localStorage.removeItem(STORAGE_KEY_TOKEN); }
+
+    // ── GitHub push ───────────────────────────────────────────────────────
+    function generateProductsJs(prods, closed) {
+      return '// products.js — managed via abesbaking.com?admin\n\n' +
+        'const shopClosed = ' + (closed ? 'true' : 'false') + ';\n\n' +
+        'const products = ' + JSON.stringify(prods, null, 2) + ';\n';
+    }
+
+    function pushToGithub(prods, closed, onSuccess, onError) {
+      var token = getGithubToken();
+      if (!token) { onError('No GitHub token saved.'); return; }
+
+      fetch(REPO_API, { headers: { 'Authorization': 'token ' + token } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.sha) throw new Error(data.message || 'Could not read file from GitHub');
+          var encoded = btoa(unescape(encodeURIComponent(generateProductsJs(prods, closed))));
+          return fetch(REPO_API, {
+            method: 'PUT',
+            headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Update menu via admin panel', content: encoded, sha: data.sha })
+          });
+        })
+        .then(function(r) {
+          if (r.status === 401) throw new Error('Invalid token — please update it below');
+          if (!r.ok) throw new Error('GitHub returned ' + r.status);
+          return r.json();
+        })
+        .then(function() { onSuccess(); })
+        .catch(function(e) { onError(e.message); });
     }
 
     // ── Render storefront ─────────────────────────────────────────────────
@@ -913,14 +1021,56 @@
     var isAdmin = new URLSearchParams(window.location.search).has('admin');
 
     function buildAdminPanel() {
-      var panel = document.getElementById('admin-panel');
-      panel.style.display = 'block';
+      document.getElementById('admin-panel').style.display = 'block';
+      if (!getGithubToken()) {
+        showTokenSetup(false);
+      } else {
+        initAdminControls();
+      }
+    }
 
-      // Reflect saved closed state in the toggle
+    function showTokenSetup(isUpdate) {
+      var list = document.getElementById('admin-products-list');
+      list.innerHTML =
+        '<div class="token-setup-card">' +
+          '<h3>' + (isUpdate ? 'Update GitHub Token' : 'Connect to GitHub') + '</h3>' +
+          '<p>Paste a GitHub Personal Access Token so the admin panel can push changes directly to your repo. ' +
+          'The token is stored only in this browser — it never appears in your code.</p>' +
+          '<ol class="token-instructions">' +
+            '<li>Go to <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">github.com → Settings → Developer settings → Fine-grained tokens</a></li>' +
+            '<li>Click <strong>Generate new token</strong></li>' +
+            '<li>Under <strong>Repository access</strong>, select only <strong>abemfortin/abesbaking</strong></li>' +
+            '<li>Under <strong>Permissions → Contents</strong>, choose <strong>Read and write</strong></li>' +
+            '<li>Generate, copy the token, and paste it below</li>' +
+          '</ol>' +
+          '<div class="token-input-row">' +
+            '<input type="password" id="gh-token-input" placeholder="github_pat_..." autocomplete="off">' +
+            '<button id="btn-save-token" class="btn-admin-save" style="padding:0.55rem 1.1rem;border-radius:7px;font-size:0.8rem;font-weight:700;border:none;cursor:pointer;">Save Token</button>' +
+            (isUpdate ? '<button id="btn-cancel-token" class="btn-admin-export" style="padding:0.55rem 1.1rem;border-radius:7px;font-size:0.8rem;font-weight:700;border:none;cursor:pointer;">Cancel</button>' : '') +
+          '</div>' +
+        '</div>';
+
+      document.getElementById('btn-save-token').addEventListener('click', function() {
+        var val = document.getElementById('gh-token-input').value.trim();
+        if (!val) return;
+        saveGithubToken(val);
+        list.innerHTML = '';
+        initAdminControls();
+      });
+
+      if (isUpdate) {
+        document.getElementById('btn-cancel-token').addEventListener('click', function() {
+          list.innerHTML = '';
+          initAdminControls();
+        });
+      }
+    }
+
+    function initAdminControls() {
       var toggle = document.getElementById('shop-closed-toggle');
       toggle.checked = getShopClosed();
       toggle.addEventListener('change', function() {
-        saveShopClosed(this.checked);
+        saveShopClosedLocal(this.checked);
         renderStorefront();
       });
 
@@ -930,30 +1080,48 @@
         var prods = readAdminForm();
         prods.push({ name: '', description: '', price: '$6.99', stripeLink: '', inStock: true, imageUrl: '' });
         renderAdminList(prods);
-        // scroll to bottom of admin list
         var list = document.getElementById('admin-products-list');
         list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
 
       document.getElementById('btn-save-products').addEventListener('click', function() {
-        var prods = readAdminForm();
-        saveProducts(prods);
-        renderStorefront();
+        var prods  = readAdminForm();
+        var closed = document.getElementById('shop-closed-toggle').checked;
+        var btn    = this;
         var notice = document.getElementById('admin-save-notice');
-        notice.style.display = 'block';
-        setTimeout(function() { notice.style.display = 'none'; }, 2500);
+
+        // Instant local save + UI update
+        saveProductsLocal(prods);
+        saveShopClosedLocal(closed);
+        renderStorefront();
+
+        btn.disabled    = true;
+        btn.textContent = 'Saving…';
+        notice.style.display = 'none';
+
+        pushToGithub(prods, closed,
+          function() {
+            btn.disabled    = false;
+            btn.textContent = 'Save Changes';
+            notice.className     = 'admin-save-notice success';
+            notice.textContent   = '✓ Saved! Website updates in ~1 minute.';
+            notice.style.display = 'block';
+            setTimeout(function() { notice.style.display = 'none'; }, 5000);
+          },
+          function(err) {
+            btn.disabled    = false;
+            btn.textContent = 'Save Changes';
+            notice.className     = 'admin-save-notice error';
+            notice.textContent   = '⚠ GitHub error: ' + err;
+            notice.style.display = 'block';
+          }
+        );
       });
 
       document.getElementById('btn-export-products').addEventListener('click', function() {
-        var prods = readAdminForm();
-        var lines = [
-          '// products.js — edit via the admin panel at yoursite.com?admin',
-          '//',
-          '// Fields: name, description, price, stripeLink, inStock (true/false), imageUrl (optional)',
-          '',
-          'const products = ' + JSON.stringify(prods, null, 2) + ';'
-        ];
-        var blob = new Blob([lines.join('\n')], { type: 'text/javascript' });
+        var prods  = readAdminForm();
+        var closed = document.getElementById('shop-closed-toggle').checked;
+        var blob = new Blob([generateProductsJs(prods, closed)], { type: 'text/javascript' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'products.js';
@@ -966,15 +1134,35 @@
       var list = document.getElementById('admin-products-list');
       list.innerHTML = '';
 
+      // "Update token" link at the bottom of the list area
+      var tokenRow = document.createElement('div');
+      tokenRow.style.cssText = 'text-align:right; margin-bottom:0.5rem;';
+      var tokenLink = document.createElement('button');
+      tokenLink.className = 'token-change-link';
+      tokenLink.textContent = '⚙ Update GitHub token';
+      tokenLink.addEventListener('click', function() {
+        list.innerHTML = '';
+        showTokenSetup(true);
+      });
+      tokenRow.appendChild(tokenLink);
+      list.appendChild(tokenRow);
+
+      if (!prods.length) {
+        var hint = document.createElement('p');
+        hint.style.cssText = 'color:var(--text-muted);font-size:0.875rem;font-style:italic;text-align:center;padding:1.5rem 0;';
+        hint.textContent = 'No items yet. Click "+ Add Item" to get started.';
+        list.appendChild(hint);
+        return;
+      }
+
       prods.forEach(function(product, i) {
         var card = document.createElement('div');
         card.className = 'admin-product-card';
-        card.setAttribute('data-index', i);
 
         card.innerHTML =
           '<div class="admin-product-card-header">' +
             '<span>Item ' + (i + 1) + '</span>' +
-            '<button class="btn-delete-product" data-index="' + i + '">Delete</button>' +
+            '<button class="btn-delete-product">Delete</button>' +
           '</div>' +
           '<div class="admin-fields">' +
             '<div class="admin-field">' +
@@ -987,7 +1175,7 @@
             '</div>' +
             '<div class="admin-field full-width">' +
               '<label>Description</label>' +
-              '<textarea name="description" placeholder="A short description of this item...">' + escText(product.description) + '</textarea>' +
+              '<textarea name="description" placeholder="A short description...">' + escText(product.description) + '</textarea>' +
             '</div>' +
             '<div class="admin-field full-width">' +
               '<label>Stripe Payment Link</label>' +
@@ -1040,10 +1228,7 @@
     }
 
     // ── Init ──────────────────────────────────────────────────────────────
-    if (isAdmin) {
-      buildAdminPanel();
-    }
-
+    if (isAdmin) buildAdminPanel();
     renderStorefront();
   </script>
 

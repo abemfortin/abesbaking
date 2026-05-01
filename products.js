@@ -14,6 +14,8 @@
  *   imageUrl    — (optional) link to a product photo; leave as "" for the default placeholder
  */
 
+const shopClosed = false;
+
 const products = [
   {
     name: "Country Sourdough Boule",
