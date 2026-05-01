@@ -912,28 +912,27 @@
       var token = getGithubToken();
       if (!token) { onError('No GitHub token saved.'); return; }
 
-      fetch(REPO_API + '?ref=main', { headers: { 'Authorization': authHeader(token) } })
+      fetch(REPO_API, { headers: { 'Authorization': authHeader(token) } })
         .then(function(r) {
-          if (r.status === 401) throw new Error('Token rejected (401) — re-enter your token below');
-          if (r.status === 403) throw new Error('Token lacks write permission (403) — check Contents is set to Read and write');
-          if (r.status === 404) throw new Error('Repo or file not found (404)');
-          if (!r.ok) throw new Error('GitHub GET failed with status ' + r.status);
+          if (!r.ok) return r.json().then(function(b) { throw new Error('GET ' + r.status + ': ' + (b.message || r.statusText)); });
           return r.json();
         })
         .then(function(data) {
-          if (!data.sha) throw new Error(data.message || 'No SHA returned — unexpected GitHub response');
+          if (!data.sha) throw new Error('No SHA in response — ' + JSON.stringify(data).slice(0, 120));
           var encoded = btoa(unescape(encodeURIComponent(generateProductsJs(prods, closed))));
           return fetch(REPO_API, {
             method: 'PUT',
             headers: { 'Authorization': authHeader(token), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: 'Update menu via admin panel', content: encoded, sha: data.sha })
+            body: JSON.stringify({
+              message: 'Update menu via admin panel',
+              content: encoded,
+              sha: data.sha,
+              branch: 'main'
+            })
           });
         })
         .then(function(r) {
-          if (r.status === 401) throw new Error('Token rejected on write (401) — re-enter your token');
-          if (r.status === 403) throw new Error('Write forbidden (403) — token needs Contents: Read and write');
-          if (r.status === 422) throw new Error('SHA mismatch (422) — try saving again');
-          if (!r.ok) throw new Error('GitHub PUT failed with status ' + r.status);
+          if (!r.ok) return r.json().then(function(b) { throw new Error('PUT ' + r.status + ': ' + (b.message || r.statusText)); });
           return r.json();
         })
         .then(function() { onSuccess(); })
