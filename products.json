@@ -20,6 +20,16 @@
       "quantity": 4,
       "imageUrl": "/images/1778476301204-chocolate-frosted-vanilla-mini-cake--1-.png",
       "inStock": true
+    },
+    {
+      "name": "Chocolate & Vanilla Frosted Mini Cake",
+      "description": "",
+      "price": "$9.99",
+      "stripeLink": "https://buy.stripe.com/eVq3cv0hOg4wavPgdh5kk0g",
+      "stripeLinkId": "plink_1TVm1VEzqlY9gRMcZxIInJQO",
+      "quantity": 1,
+      "imageUrl": "/images/1778476470385-vanilla-and-chocolate-frosted-vanilla-mini-cake--1-.png",
+      "inStock": true
     }
   ]
 }
