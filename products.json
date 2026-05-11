@@ -2,13 +2,13 @@
   "shopClosed": false,
   "products": [
     {
-      "name": "Brown Butter Chocolate Chip Cookies",
-      "description": "Thick bakery-style cookies made with browned butter, dark chocolate chunks, and a finishing sprinkle of flaky sea salt. Half-dozen per order.",
-      "price": "$6.99",
-      "stripeLink": "https://buy.stripe.com/6oU6oHd4A8C41Zjf9d5kk0d",
-      "stripeLinkId": "plink_1TPEPmEzqlY9gRMcWqnx3xG5",
-      "quantity": 2,
-      "imageUrl": "/images/1777659834390-cookie-pictures--2-.png",
+      "name": "Chocolate Frosted Mini Cake",
+      "description": "",
+      "price": "$9.99",
+      "stripeLink": "https://buy.stripe.com/fZueVde8E5pS5bvbX15kk0e",
+      "stripeLinkId": "plink_1TVlwMEzqlY9gRMc0sVc8tGy",
+      "quantity": 4,
+      "imageUrl": "/images/1778475615674-chocolate-frosted-vanilla-mini-cake--1-.png",
       "inStock": true
     }
   ]
