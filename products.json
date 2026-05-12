@@ -1,25 +1,4 @@
 {
-  "shopClosed": false,
-  "products": [
-    {
-      "name": "Vanilla Frosted Mini Cake",
-      "description": "",
-      "price": "$6.99",
-      "stripeLink": "https://buy.stripe.com/6oU8wP7Kgg4wfQ98KP5kk0f",
-      "stripeLinkId": "plink_1TVly4EzqlY9gRMcAPUZ5kHK",
-      "quantity": 3,
-      "imageUrl": "/images/1778534630385-img-3770.jpg",
-      "inStock": true
-    },
-    {
-      "name": "Chocolate Frosted Mini Cake",
-      "description": "",
-      "price": "$6.99",
-      "stripeLink": "https://buy.stripe.com/fZueVde8E5pS5bvbX15kk0e",
-      "stripeLinkId": "plink_1TVlwMEzqlY9gRMc0sVc8tGy",
-      "quantity": 4,
-      "imageUrl": "/images/1778534509981-img-3762.jpg",
-      "inStock": true
-    }
-  ]
+  "shopClosed": true,
+  "products": []
 }
