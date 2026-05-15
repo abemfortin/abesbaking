@@ -841,6 +841,107 @@
 .btn-order-pickup .option-label { display: flex; align-items: center; gap: 0.4rem; }
 .btn-order-pickup .option-price { font-weight: 400; font-size: 0.82rem; opacity: 0.75; }
 
+/* ── Featured product (single-item layout) ── */
+.featured-product {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--white);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 6px 40px rgba(30, 45, 79, 0.12);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.featured-product-image {
+  min-height: 460px;
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-product-image .product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  font-size: 5rem;
+}
+
+.featured-product-body {
+  padding: 2.75rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-badge {
+  display: inline-block;
+  background: var(--navy);
+  color: var(--cream);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.9rem;
+  border-radius: 20px;
+  align-self: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.featured-product-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--navy-dark);
+  line-height: 1.2;
+  margin-bottom: 0.85rem;
+}
+
+.featured-from-price {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.featured-product-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.78;
+  flex: 1;
+  margin-bottom: 1.75rem;
+}
+
+.featured-order-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.featured-order-options .btn-order-delivery,
+.featured-order-options .btn-order-pickup {
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+}
+
+@media (max-width: 700px) {
+  .featured-product {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+  .featured-product-image { min-height: 260px; }
+  .featured-product-image .product-image-placeholder { min-height: 260px; }
+  .featured-product-body { padding: 1.75rem 1.5rem; }
+  .featured-product-name { font-size: 1.55rem; }
+}
+
 /* ── Admin fulfillment sub-sections ── */
 .admin-fulfillment-section {
   margin-top: 1rem;
@@ -1115,12 +1216,52 @@ function uploadImageToGithub(file, token, onDone, onError) {
   reader.readAsDataURL(file);
 }
 
+// ── Build order buttons (shared by card and featured layouts) ─────────────
+function buildOrderButtons(product, wrapClass) {
+  var wrap = document.createElement('div');
+  wrap.className = wrapClass;
+
+  if (product.delivery && product.delivery.stripeLink) {
+    var delivBtn = document.createElement('a');
+    delivBtn.href = product.delivery.stripeLink;
+    delivBtn.target = '_blank'; delivBtn.rel = 'noopener noreferrer';
+    delivBtn.className = 'btn-order-delivery';
+    var dLabel = document.createElement('span'); dLabel.className = 'option-label';
+    dLabel.innerHTML = '🚚 Delivery<span class="delivery-rec-tag">Recommended</span>';
+    var dPrice = document.createElement('span'); dPrice.className = 'option-price';
+    dPrice.textContent = product.delivery.price || '';
+    delivBtn.appendChild(dLabel); delivBtn.appendChild(dPrice);
+    wrap.appendChild(delivBtn);
+  }
+
+  if (product.pickup && product.pickup.stripeLink) {
+    var pickupBtn = document.createElement('a');
+    pickupBtn.href = product.pickup.stripeLink;
+    pickupBtn.target = '_blank'; pickupBtn.rel = 'noopener noreferrer';
+    pickupBtn.className = 'btn-order-pickup';
+    var pLabel = document.createElement('span'); pLabel.className = 'option-label';
+    pLabel.textContent = '🛍 Pickup';
+    var pPrice = document.createElement('span'); pPrice.className = 'option-price';
+    pPrice.textContent = product.pickup.price || '';
+    pickupBtn.appendChild(pLabel); pickupBtn.appendChild(pPrice);
+    wrap.appendChild(pickupBtn);
+  }
+
+  return wrap.children.length ? wrap : null;
+}
+
 // ── Render storefront ─────────────────────────────────────────────────────
 function renderStorefront(data) {
   var grid    = document.getElementById('products-grid');
+  var section = document.getElementById('menu');
   var banner  = document.getElementById('shop-closed-banner');
   var loading = document.getElementById('products-loading');
   if (loading) loading.style.display = 'none';
+
+  // Remove any previous featured layout
+  var prev = section.querySelector('.featured-product');
+  if (prev) prev.remove();
+
   grid.innerHTML = '';
 
   if (data.shopClosed) {
@@ -1129,15 +1270,92 @@ function renderStorefront(data) {
     return;
   }
   banner.style.display = 'none';
-  grid.style.display   = '';
 
   if (!data.products || !data.products.length) {
+    grid.style.display = '';
     var empty = document.createElement('p');
     empty.className   = 'products-empty';
     empty.textContent = 'No items this week — check back soon or follow @abesbaking for updates.';
     grid.appendChild(empty);
     return;
   }
+
+  // ── Single product: featured layout ──────────────────────────────────────
+  if (data.products.length === 1) {
+    grid.style.display = 'none';
+    var product   = data.products[0];
+    var available = isAvailable(product);
+
+    var featured = document.createElement('div');
+    featured.className = 'featured-product' + (available ? '' : ' sold-out');
+
+    // Image
+    var imgWrap = document.createElement('div');
+    imgWrap.className = 'featured-product-image';
+    if (product.imageUrl) {
+      var fImg = document.createElement('img');
+      fImg.src = product.imageUrl; fImg.alt = product.name; fImg.loading = 'lazy';
+      imgWrap.appendChild(fImg);
+    } else {
+      var fPh = document.createElement('div');
+      fPh.className = 'product-image-placeholder';
+      fPh.setAttribute('aria-hidden', 'true');
+      fPh.textContent = '🍞';
+      imgWrap.appendChild(fPh);
+    }
+
+    // Body
+    var fBody = document.createElement('div');
+    fBody.className = 'featured-product-body';
+
+    var fbadge = document.createElement('span');
+    fbadge.className = 'featured-badge';
+    fbadge.textContent = "This Week's Special";
+    fBody.appendChild(fbadge);
+
+    var fName = document.createElement('h3');
+    fName.className = 'featured-product-name';
+    fName.textContent = product.name;
+    fBody.appendChild(fName);
+
+    var pickupPrice = product.pickup && product.pickup.price;
+    if (pickupPrice) {
+      var fFrom = document.createElement('p');
+      fFrom.className = 'featured-from-price';
+      fFrom.textContent = 'Starting from ' + pickupPrice;
+      fBody.appendChild(fFrom);
+    }
+
+    if (available && product.quantity !== null && product.quantity !== undefined && product.quantity <= 5 && product.quantity > 0) {
+      var fQty = document.createElement('span');
+      fQty.className = 'qty-badge';
+      fQty.textContent = 'Only ' + product.quantity + ' left!';
+      fBody.appendChild(fQty);
+    }
+
+    var fDesc = document.createElement('p');
+    fDesc.className = 'featured-product-desc';
+    fDesc.textContent = product.description;
+    fBody.appendChild(fDesc);
+
+    if (available) {
+      var fBtns = buildOrderButtons(product, 'featured-order-options');
+      if (fBtns) fBody.appendChild(fBtns);
+    } else {
+      var fSoldOut = document.createElement('span');
+      fSoldOut.className = 'badge-sold-out';
+      fSoldOut.textContent = 'Sold Out';
+      fBody.appendChild(fSoldOut);
+    }
+
+    featured.appendChild(imgWrap);
+    featured.appendChild(fBody);
+    grid.parentNode.insertBefore(featured, grid);
+    return;
+  }
+
+  // ── Multiple products: standard grid ─────────────────────────────────────
+  grid.style.display = '';
 
   data.products.forEach(function(product) {
     var available = isAvailable(product);
@@ -1167,7 +1385,6 @@ function renderStorefront(data) {
     var nameEl = document.createElement('h3');
     nameEl.className = 'product-name'; nameEl.textContent = product.name;
     meta.appendChild(nameEl);
-    // Show "from $X" if pickup price exists
     var pickupPrice = product.pickup && product.pickup.price;
     if (pickupPrice) {
       var fromEl = document.createElement('span');
@@ -1181,7 +1398,6 @@ function renderStorefront(data) {
 
     body.appendChild(meta);
 
-    // "Only N left!" badge
     if (available && product.quantity !== null && product.quantity !== undefined && product.quantity <= 5 && product.quantity > 0) {
       var qtyBadge = document.createElement('span');
       qtyBadge.className   = 'qty-badge';
@@ -1192,38 +1408,8 @@ function renderStorefront(data) {
     body.appendChild(desc);
 
     if (available) {
-      var optionsWrap = document.createElement('div');
-      optionsWrap.className = 'order-options';
-
-      // Delivery button (shown first / promoted)
-      if (product.delivery && product.delivery.stripeLink) {
-        var delivBtn = document.createElement('a');
-        delivBtn.href = product.delivery.stripeLink;
-        delivBtn.target = '_blank'; delivBtn.rel = 'noopener noreferrer';
-        delivBtn.className = 'btn-order-delivery';
-        var dLabel = document.createElement('span'); dLabel.className = 'option-label';
-        dLabel.innerHTML = '🚚 Delivery<span class="delivery-rec-tag">Recommended</span>';
-        var dPrice = document.createElement('span'); dPrice.className = 'option-price';
-        dPrice.textContent = product.delivery.price || '';
-        delivBtn.appendChild(dLabel); delivBtn.appendChild(dPrice);
-        optionsWrap.appendChild(delivBtn);
-      }
-
-      // Pickup button (secondary)
-      if (product.pickup && product.pickup.stripeLink) {
-        var pickupBtn = document.createElement('a');
-        pickupBtn.href = product.pickup.stripeLink;
-        pickupBtn.target = '_blank'; pickupBtn.rel = 'noopener noreferrer';
-        pickupBtn.className = 'btn-order-pickup';
-        var pLabel = document.createElement('span'); pLabel.className = 'option-label';
-        pLabel.textContent = '🛍 Pickup';
-        var pPrice = document.createElement('span'); pPrice.className = 'option-price';
-        pPrice.textContent = product.pickup.price || '';
-        pickupBtn.appendChild(pLabel); pickupBtn.appendChild(pPrice);
-        optionsWrap.appendChild(pickupBtn);
-      }
-
-      if (optionsWrap.children.length) body.appendChild(optionsWrap);
+      var btns = buildOrderButtons(product, 'order-options');
+      if (btns) body.appendChild(btns);
     } else {
       var badge = document.createElement('span');
       badge.className = 'badge-sold-out'; badge.textContent = 'Sold Out';
