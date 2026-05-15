@@ -7,6 +7,12 @@
       "quantity": 18,
       "imageUrl": "/images/1778844796534-untitled-design--6-.png",
       "inStock": true,
+      "tags": [
+        "contains-gluten",
+        "contains-dairy",
+        "contains-eggs",
+        "contains-nuts"
+      ],
       "pickup": {
         "price": "$4.99",
         "stripeLink": "https://buy.stripe.com/28EaEXe8EbOg1Zj8KP5kk0i",
