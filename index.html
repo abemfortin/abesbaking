@@ -942,6 +942,95 @@
   .featured-product-name { font-size: 1.55rem; }
 }
 
+/* ── Allergen / dietary tag pills (storefront) ── */
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+.product-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 20px;
+}
+.product-tag.safe    { background: #e6f4e6; color: #246024; }
+.product-tag.warning { background: #fff3e0; color: #7a4200; }
+
+/* ── Admin tag picker ── */
+.admin-tag-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.admin-tag-btn {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 0.28rem 0.7rem; border-radius: 20px;
+  border: 1.5px solid #D8DCE8; background: #fafafa;
+  color: var(--text-muted); cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+}
+.admin-tag-btn:hover { border-color: var(--navy); color: var(--navy); }
+.admin-tag-btn.selected.safe    { background: #e6f4e6; border-color: #246024; color: #246024; }
+.admin-tag-btn.selected.warning { background: #fff3e0; border-color: #7a4200; color: #7a4200; }
+
+/* ── Duplicate / Save-to-library card buttons ── */
+.btn-duplicate-product {
+  background: none; border: 1.5px solid var(--navy); color: var(--navy);
+  border-radius: 6px; padding: 0.25rem 0.65rem; font-size: 0.75rem;
+  font-weight: 700; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.btn-duplicate-product:hover { background: var(--navy); color: #fff; }
+.btn-save-to-library {
+  background: none; border: 1.5px solid #aaa; color: #888;
+  border-radius: 6px; padding: 0.25rem 0.65rem; font-size: 0.75rem;
+  font-weight: 700; cursor: pointer; transition: all 0.15s;
+}
+.btn-save-to-library:hover        { border-color: #c89000; color: #c89000; }
+.btn-save-to-library.lib-saved    { border-color: #c89000; color: #c89000; background: #fffbe6; }
+
+/* ── Add Existing button ── */
+.btn-admin-existing { background: #5a4a8a; color: #fff; }
+
+/* ── Saved products library panel ── */
+.admin-library-inner {
+  border: 1.5px solid #c0cadf; border-radius: 12px;
+  background: #f0f4ff; padding: 1.1rem 1.4rem 1.25rem;
+}
+.admin-library-inner h4 {
+  font-size: 0.78rem; font-weight: 700; color: var(--navy-dark);
+  text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.85rem;
+}
+.library-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 0.65rem;
+}
+.library-item {
+  background: var(--white); border-radius: 8px; padding: 0.8rem 1rem;
+  border: 1.5px solid var(--cream-dark); display: flex; flex-direction: column; gap: 0.3rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.library-item:hover { border-color: var(--navy); box-shadow: 0 2px 8px rgba(30,45,79,0.08); }
+.library-item-name { font-weight: 700; font-size: 0.84rem; color: var(--navy-dark); }
+.library-item-desc {
+  font-size: 0.74rem; color: var(--text-muted); line-height: 1.4;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+}
+.library-item-actions { display: flex; gap: 0.45rem; align-items: center; margin-top: 0.35rem; }
+.btn-library-add {
+  background: var(--navy); color: #fff; border: none; border-radius: 6px;
+  padding: 0.28rem 0.8rem; font-size: 0.72rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background 0.15s;
+}
+.btn-library-add:hover { background: var(--navy-light); }
+.btn-library-remove {
+  background: none; border: none; color: #c44; font-size: 0.72rem;
+  cursor: pointer; font-family: inherit; padding: 0.28rem 0.4rem;
+  border-radius: 4px; transition: background 0.15s;
+}
+.btn-library-remove:hover { background: #fee; }
+
 /* ── Admin fulfillment sub-sections ── */
 .admin-fulfillment-section {
   margin-top: 1rem;
@@ -1008,6 +1097,7 @@
       </div>
       <div class="admin-toolbar">
         <button class="btn-admin-add" id="btn-add-product">+ Add Item</button>
+        <button class="btn-admin-existing" id="btn-add-existing">⭐ Add Existing</button>
         <button class="btn-admin-save" id="btn-save-products">Save Changes</button>
         <button class="btn-admin-export" id="btn-export-products">Export products.json</button>
         <a class="btn-admin-exit" href="?">← Exit Admin</a>
@@ -1025,6 +1115,7 @@
         </div>
       </div>
     </div>
+    <div id="admin-library-panel" style="display:none;max-width:860px;margin:0 auto;padding:0 1.5rem 0.5rem;"></div>
     <div class="admin-products-list" id="admin-products-list"></div>
     <div class="admin-save-notice" id="admin-save-notice">✓ Menu saved!</div>
   </div>
@@ -1111,7 +1202,38 @@
 
 var PRODUCTS_API = 'https://api.github.com/repos/abemfortin/abesbaking/contents/products.json';
 var IMAGES_BASE  = 'https://api.github.com/repos/abemfortin/abesbaking/contents/images/';
-var STORAGE_KEY_TOKEN = 'abes_baking_gh_token';
+var STORAGE_KEY_TOKEN  = 'abes_baking_gh_token';
+var STORAGE_KEY_SAVED  = 'abes_baking_saved_products';
+
+var ALLERGEN_TAGS = [
+  { id:'vegetarian',      label:'Vegetarian',     icon:'🌱', style:'safe'    },
+  { id:'vegan',           label:'Vegan',           icon:'🌿', style:'safe'    },
+  { id:'gluten-free',     label:'Gluten-Free',     icon:'GF', style:'safe'    },
+  { id:'dairy-free',      label:'Dairy-Free',      icon:'DF', style:'safe'    },
+  { id:'nut-free',        label:'Nut-Free',        icon:'NF', style:'safe'    },
+  { id:'contains-gluten', label:'Contains Gluten', icon:'🌾', style:'warning' },
+  { id:'contains-dairy',  label:'Contains Dairy',  icon:'🥛', style:'warning' },
+  { id:'contains-eggs',   label:'Contains Eggs',   icon:'🥚', style:'warning' },
+  { id:'contains-nuts',   label:'Contains Nuts',   icon:'🥜', style:'warning' },
+  { id:'contains-soy',    label:'Contains Soy',    icon:'',   style:'warning' }
+];
+
+function getSavedProducts() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_SAVED) || '[]'); } catch(e) { return []; }
+}
+function saveProductToLibrary(prod) {
+  var saved = getSavedProducts();
+  var entry = JSON.parse(JSON.stringify(prod)); // deep copy
+  entry.quantity = null; entry.inStock = true;
+  var found = false;
+  for (var j = 0; j < saved.length; j++) { if (saved[j].name === entry.name) { saved[j] = entry; found = true; break; } }
+  if (!found) saved.push(entry);
+  localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(saved));
+}
+function removeFromLibrary(name) {
+  var filtered = getSavedProducts().filter(function(p) { return p.name !== name; });
+  localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(filtered));
+}
 
 var currentFileSha = null;
 var pendingImages  = {}; // { cardIndex (string) -> File }
@@ -1394,6 +1516,19 @@ function renderStorefront(data) {
       fBody.appendChild(fQty);
     }
 
+    if (product.tags && product.tags.length) {
+      var fTagsEl = document.createElement('div'); fTagsEl.className = 'product-tags';
+      product.tags.forEach(function(tid) {
+        var td = ALLERGEN_TAGS.find(function(t) { return t.id === tid; });
+        if (!td) return;
+        var pill = document.createElement('span');
+        pill.className = 'product-tag ' + td.style;
+        pill.textContent = (td.icon ? td.icon + ' ' : '') + td.label;
+        fTagsEl.appendChild(pill);
+      });
+      fBody.appendChild(fTagsEl);
+    }
+
     var fDesc = document.createElement('p');
     fDesc.className = 'featured-product-desc';
     fDesc.textContent = product.description;
@@ -1482,6 +1617,19 @@ function renderStorefront(data) {
       qtyBadge.className   = 'qty-badge';
       qtyBadge.textContent = 'Only ' + product.quantity + ' left!';
       body.appendChild(qtyBadge);
+    }
+
+    if (product.tags && product.tags.length) {
+      var tagsEl = document.createElement('div'); tagsEl.className = 'product-tags';
+      product.tags.forEach(function(tid) {
+        var td = ALLERGEN_TAGS.find(function(t) { return t.id === tid; });
+        if (!td) return;
+        var pill = document.createElement('span');
+        pill.className = 'product-tag ' + td.style;
+        pill.textContent = (td.icon ? td.icon + ' ' : '') + td.label;
+        tagsEl.appendChild(pill);
+      });
+      body.appendChild(tagsEl);
     }
 
     body.appendChild(desc);
@@ -1580,10 +1728,57 @@ function initAdminControls() {
 
   reattach('btn-add-product', function() {
     appData.products = appData.products || [];
-    appData.products.push({ name:'', description:'', quantity:null, imageUrl:'', inStock:true, pickup:{ price:'$6.99', stripeLink:'', stripeLinkId:'' }, delivery:{ price:'$9.99', stripeLink:'', stripeLinkId:'' } });
+    appData.products.push({ name:'', description:'', quantity:null, imageUrl:'', inStock:true, tags:[], pickup:{ price:'$6.99', stripeLink:'', stripeLinkId:'' }, delivery:{ price:'$9.99', stripeLink:'', stripeLinkId:'' } });
     renderAdminList(appData.products);
     var list = document.getElementById('admin-products-list');
     list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+
+  reattach('btn-add-existing', function() {
+    var panel = document.getElementById('admin-library-panel');
+    if (panel.style.display !== 'none') { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+    var saved = getSavedProducts();
+    panel.innerHTML = '';
+    panel.style.display = 'block';
+    var inner = document.createElement('div'); inner.className = 'admin-library-inner';
+    var h4 = document.createElement('h4'); h4.textContent = '⭐ Saved Products'; inner.appendChild(h4);
+    if (!saved.length) {
+      var msg = document.createElement('p');
+      msg.style.cssText = 'color:var(--text-muted);font-size:0.875rem;font-style:italic;';
+      msg.textContent = 'No saved products yet — click "⭐ Save" on any product card to save it here.';
+      inner.appendChild(msg);
+    } else {
+      var libGrid = document.createElement('div'); libGrid.className = 'library-grid';
+      saved.forEach(function(prod) {
+        var item = document.createElement('div'); item.className = 'library-item';
+        var nm = document.createElement('div'); nm.className = 'library-item-name'; nm.textContent = prod.name || 'Unnamed';
+        var ds = document.createElement('div'); ds.className = 'library-item-desc'; ds.textContent = prod.description || '';
+        var acts = document.createElement('div'); acts.className = 'library-item-actions';
+        var addBtn = document.createElement('button'); addBtn.className = 'btn-library-add'; addBtn.textContent = '+ Add to Menu';
+        addBtn.addEventListener('click', function() {
+          var newProd = JSON.parse(JSON.stringify(prod)); newProd.quantity = null; newProd.inStock = true;
+          appData.products = appData.products || []; appData.products.push(newProd);
+          renderAdminList(appData.products); panel.style.display = 'none'; panel.innerHTML = '';
+          var cards = document.querySelectorAll('.admin-product-card');
+          if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior:'smooth', block:'center' });
+        });
+        var rmBtn = document.createElement('button'); rmBtn.className = 'btn-library-remove'; rmBtn.textContent = '✕';
+        rmBtn.title = 'Remove from library';
+        rmBtn.addEventListener('click', function() {
+          removeFromLibrary(prod.name); item.remove();
+          if (!libGrid.children.length) { libGrid.insertAdjacentHTML('beforebegin', '<p style="color:var(--text-muted);font-size:0.875rem;font-style:italic;">Library is now empty.</p>'); }
+        });
+        acts.appendChild(addBtn); acts.appendChild(rmBtn);
+        item.appendChild(nm); item.appendChild(ds); item.appendChild(acts);
+        libGrid.appendChild(item);
+      });
+      inner.appendChild(libGrid);
+    }
+    var closeRow = document.createElement('div'); closeRow.style.cssText = 'text-align:right;margin-top:0.85rem;';
+    var closeBtn = document.createElement('button'); closeBtn.className = 'token-change-link'; closeBtn.textContent = '✕ Close library';
+    closeBtn.addEventListener('click', function() { panel.style.display = 'none'; panel.innerHTML = ''; });
+    closeRow.appendChild(closeBtn); inner.appendChild(closeRow);
+    panel.appendChild(inner);
   });
 
   reattach('btn-save-products', function() {
@@ -1683,6 +1878,35 @@ function renderAdminList(prods) {
     cardHeader.className = 'admin-product-card-header';
     var cardLabel = document.createElement('span');
     cardLabel.textContent = 'Item ' + (i + 1) + (product.name ? ' — ' + product.name : '');
+
+    var headerBtns = document.createElement('div');
+    headerBtns.style.cssText = 'display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;';
+
+    // Save to library
+    var saveLibBtn = document.createElement('button');
+    saveLibBtn.className = 'btn-save-to-library';
+    var libNames = getSavedProducts().map(function(p) { return p.name; });
+    if (product.name && libNames.indexOf(product.name) >= 0) {
+      saveLibBtn.classList.add('lib-saved'); saveLibBtn.textContent = '⭐ Saved';
+    } else { saveLibBtn.textContent = '⭐ Save'; }
+    saveLibBtn.addEventListener('click', function() {
+      var cur = readAdminForm(); saveProductToLibrary(cur[i]);
+      saveLibBtn.classList.add('lib-saved'); saveLibBtn.textContent = '⭐ Saved';
+    });
+
+    // Duplicate
+    var dupBtn = document.createElement('button');
+    dupBtn.className = 'btn-duplicate-product'; dupBtn.textContent = '⧉ Duplicate';
+    dupBtn.addEventListener('click', function() {
+      var cur = readAdminForm();
+      var copy = JSON.parse(JSON.stringify(cur[i]));
+      cur.splice(i + 1, 0, copy);
+      appData.products = cur; renderAdminList(cur);
+      var cards = document.querySelectorAll('.admin-product-card');
+      if (cards[i + 1]) cards[i + 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // Delete
     var delBtn = document.createElement('button');
     delBtn.className = 'btn-delete-product'; delBtn.textContent = 'Delete';
     delBtn.addEventListener('click', function() {
@@ -1691,7 +1915,12 @@ function renderAdminList(prods) {
         appData.products = current; renderAdminList(current);
       }
     });
-    cardHeader.appendChild(cardLabel); cardHeader.appendChild(delBtn);
+
+    headerBtns.appendChild(saveLibBtn);
+    headerBtns.appendChild(dupBtn);
+    headerBtns.appendChild(delBtn);
+    cardHeader.appendChild(cardLabel);
+    cardHeader.appendChild(headerBtns);
     card.appendChild(cardHeader);
 
     // ── Fields grid ──
@@ -1752,6 +1981,31 @@ function renderAdminList(prods) {
     delivFields.appendChild(delivIdField);
     delivSection.appendChild(delivFields);
     card.appendChild(delivSection);
+
+    // ── Tags section ──
+    var tagsSection = document.createElement('div');
+    tagsSection.className = 'admin-fulfillment-section';
+    var tagsSecLabel = document.createElement('div');
+    tagsSecLabel.className = 'admin-fulfillment-label';
+    tagsSecLabel.textContent = '🏷 Allergens & Dietary';
+    tagsSection.appendChild(tagsSecLabel);
+    var tagsPicker = document.createElement('div');
+    tagsPicker.className = 'admin-tag-picker';
+    var selectedTags = product.tags || [];
+    ALLERGEN_TAGS.forEach(function(td) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'admin-tag-btn' + (selectedTags.indexOf(td.id) >= 0 ? ' selected ' + td.style : '');
+      btn.dataset.tagId = td.id; btn.dataset.tagStyle = td.style;
+      btn.textContent = (td.icon ? td.icon + ' ' : '') + td.label;
+      btn.addEventListener('click', function() {
+        if (this.classList.contains('selected')) { this.classList.remove('selected', 'safe', 'warning'); }
+        else { this.classList.add('selected', td.style); }
+      });
+      tagsPicker.appendChild(btn);
+    });
+    tagsSection.appendChild(tagsPicker);
+    card.appendChild(tagsSection);
 
     // ── Image upload ──
     var imgSection = document.createElement('div');
@@ -1839,12 +2093,16 @@ function readAdminForm() {
     var qtyRaw = (card.querySelector('[name="quantity"]') || {}).value;
     var qty    = (qtyRaw === '' || qtyRaw === null || qtyRaw === undefined) ? null : parseInt(qtyRaw, 10);
     if (isNaN(qty)) qty = null;
+    var tagBtns = card.querySelectorAll('.admin-tag-btn.selected');
+    var tags = [];
+    tagBtns.forEach(function(b) { if (b.dataset.tagId) tags.push(b.dataset.tagId); });
     prods.push({
       name:        (card.querySelector('[name="name"]') || {}).value || '',
       description: (card.querySelector('[name="description"]') || {}).value || '',
       quantity:    qty,
       imageUrl:    (card.querySelector('[name="imageUrl"]') || {}).value || '',
       inStock:     !!(card.querySelector('[name="inStock"]') || {}).checked,
+      tags:        tags,
       pickup: {
         price:        (card.querySelector('[name="pickup_price"]') || {}).value || '$6.99',
         stripeLink:   (card.querySelector('[name="pickup_stripeLink"]') || {}).value || '',
