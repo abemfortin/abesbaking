@@ -1,4 +1,22 @@
 {
-  "shopClosed": true,
-  "products": []
+  "shopClosed": false,
+  "products": [
+    {
+      "name": "Peanut Butter Marshmallow Brownies",
+      "description": "These brownies start with a rich, from-scratch chocolate base and get swirled with creamy peanut butter and marshmallow before baking.",
+      "quantity": 18,
+      "imageUrl": "/images/1778844796534-untitled-design--6-.png",
+      "inStock": true,
+      "pickup": {
+        "price": "$4.99",
+        "stripeLink": "https://buy.stripe.com/28EaEXe8EbOg1Zj8KP5kk0i",
+        "stripeLinkId": "plink_1TXJmVEzqlY9gRMcKYmMqN9P"
+      },
+      "delivery": {
+        "price": "$6.98",
+        "stripeLink": "https://buy.stripe.com/14A5kDc0wdWogUdd155kk0h",
+        "stripeLinkId": "plink_1TXJisEzqlY9gRMcl4bMq3mq"
+      }
+    }
+  ]
 }
