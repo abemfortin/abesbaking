@@ -1216,6 +1216,61 @@ function uploadImageToGithub(file, token, onDone, onError) {
   reader.readAsDataURL(file);
 }
 
+// ── Color theming from product image ─────────────────────────────────────
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  var max = Math.max(r,g,b), min = Math.min(r,g,b);
+  var h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch(max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return [h * 360, s, l];
+}
+
+function extractDominantHue(img, callback) {
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 80;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 80, 80);
+    var data = ctx.getImageData(0, 0, 80, 80).data;
+    var buckets = new Array(12).fill(0);
+    for (var i = 0; i < data.length; i += 4) {
+      var hsl = rgbToHsl(data[i], data[i+1], data[i+2]);
+      if (hsl[1] < 0.12 || hsl[2] < 0.1 || hsl[2] > 0.92) continue;
+      buckets[Math.floor(hsl[0] / 30)]++;
+    }
+    var max = 0, best = -1;
+    for (var j = 0; j < 12; j++) { if (buckets[j] > max) { max = buckets[j]; best = j; } }
+    callback(max > 0 ? best * 30 + 15 : null);
+  } catch(e) { callback(null); }
+}
+
+function applyThemeFromHue(hue) {
+  var root = document.documentElement;
+  var s = 42;
+  root.style.setProperty('--navy-dark',  'hsl(' + hue + ',' + s + '%,18%)');
+  root.style.setProperty('--navy',       'hsl(' + hue + ',' + s + '%,30%)');
+  root.style.setProperty('--navy-light', 'hsl(' + hue + ',' + (s+8) + '%,42%)');
+  root.style.setProperty('--cream',      'hsl(' + hue + ',28%,95%)');
+  root.style.setProperty('--cream-dark', 'hsl(' + hue + ',22%,88%)');
+  root.style.setProperty('--text-main',  'hsl(' + hue + ',' + s + '%,16%)');
+  root.style.setProperty('--text-muted', 'hsl(' + hue + ',18%,38%)');
+}
+
+function resetTheme() {
+  ['--navy-dark','--navy','--navy-light','--cream','--cream-dark','--text-main','--text-muted'].forEach(function(v) {
+    document.documentElement.style.removeProperty(v);
+  });
+}
+
 // ── Build order buttons (shared by card and featured layouts) ─────────────
 function buildOrderButtons(product, wrapClass) {
   var wrap = document.createElement('div');
@@ -1255,8 +1310,13 @@ function renderStorefront(data) {
   var grid    = document.getElementById('products-grid');
   var section = document.getElementById('menu');
   var banner  = document.getElementById('shop-closed-banner');
+  var heading = document.getElementById('menu-title');
   var loading = document.getElementById('products-loading');
   if (loading) loading.style.display = 'none';
+
+  // Reset dynamic theme and heading visibility
+  resetTheme();
+  if (heading) heading.style.display = '';
 
   // Remove any previous featured layout
   var prev = section.querySelector('.featured-product');
@@ -1283,6 +1343,7 @@ function renderStorefront(data) {
   // ── Single product: featured layout ──────────────────────────────────────
   if (data.products.length === 1) {
     grid.style.display = 'none';
+    if (heading) heading.style.display = 'none'; // hide "This Week's Menu" heading
     var product   = data.products[0];
     var available = isAvailable(product);
 
@@ -1351,6 +1412,24 @@ function renderStorefront(data) {
     featured.appendChild(imgWrap);
     featured.appendChild(fBody);
     grid.parentNode.insertBefore(featured, grid);
+
+    // Theme the page from the product image
+    if (product.imageUrl) {
+      var themeImg = new Image();
+      themeImg.crossOrigin = 'anonymous';
+      themeImg.onload = function() {
+        extractDominantHue(themeImg, function(hue) {
+          if (hue !== null) applyThemeFromHue(hue);
+        });
+      };
+      // If already cached, onload may not fire — check .complete
+      themeImg.src = product.imageUrl;
+      if (themeImg.complete) {
+        extractDominantHue(themeImg, function(hue) {
+          if (hue !== null) applyThemeFromHue(hue);
+        });
+      }
+    }
     return;
   }
 
