@@ -779,6 +779,86 @@
   word-break: break-all;
 }
 
+/* ── Order options (delivery / pickup) ── */
+.order-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.btn-order-delivery {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.72rem 1rem;
+  background: var(--navy);
+  color: var(--white);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-order-delivery:hover  { background: var(--navy-light); }
+.btn-order-delivery:active { transform: scale(0.98); }
+
+.btn-order-delivery .option-label { display: flex; align-items: center; gap: 0.4rem; }
+.btn-order-delivery .option-price { font-weight: 400; opacity: 0.85; font-size: 0.82rem; }
+.delivery-rec-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.92);
+  border-radius: 10px;
+  padding: 0.1rem 0.45rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.btn-order-pickup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  color: var(--navy);
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1.5px solid var(--navy);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.btn-order-pickup:hover  { background: var(--navy); color: var(--white); }
+.btn-order-pickup:active { transform: scale(0.98); }
+.btn-order-pickup .option-label { display: flex; align-items: center; gap: 0.4rem; }
+.btn-order-pickup .option-price { font-weight: 400; font-size: 0.82rem; opacity: 0.75; }
+
+/* ── Admin fulfillment sub-sections ── */
+.admin-fulfillment-section {
+  margin-top: 1rem;
+  border-top: 1.5px solid var(--cream-dark);
+  padding-top: 0.85rem;
+}
+.admin-fulfillment-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
     /* ── Responsive ── */
     @media (max-width: 780px) {
       .about-grid {
@@ -872,7 +952,7 @@
   </header>
 
   <div class="announcement">
-    Orders placed weekly &mdash; pickup in Yarmouth, ME
+    Orders placed weekly &mdash; pickup &amp; delivery in Yarmouth, ME
   </div>
 
   <main>
@@ -1086,9 +1166,15 @@ function renderStorefront(data) {
     meta.className = 'product-meta';
     var nameEl = document.createElement('h3');
     nameEl.className = 'product-name'; nameEl.textContent = product.name;
-    var priceEl = document.createElement('span');
-    priceEl.className = 'product-price'; priceEl.textContent = product.price;
-    meta.appendChild(nameEl); meta.appendChild(priceEl);
+    meta.appendChild(nameEl);
+    // Show "from $X" if pickup price exists
+    var pickupPrice = product.pickup && product.pickup.price;
+    if (pickupPrice) {
+      var fromEl = document.createElement('span');
+      fromEl.className = 'product-price';
+      fromEl.textContent = 'from ' + pickupPrice;
+      meta.appendChild(fromEl);
+    }
 
     var desc = document.createElement('p');
     desc.className = 'product-desc'; desc.textContent = product.description;
@@ -1106,10 +1192,38 @@ function renderStorefront(data) {
     body.appendChild(desc);
 
     if (available) {
-      var btn = document.createElement('a');
-      btn.href = product.stripeLink; btn.target = '_blank'; btn.rel = 'noopener noreferrer';
-      btn.className = 'btn-order'; btn.textContent = 'Order Now';
-      body.appendChild(btn);
+      var optionsWrap = document.createElement('div');
+      optionsWrap.className = 'order-options';
+
+      // Delivery button (shown first / promoted)
+      if (product.delivery && product.delivery.stripeLink) {
+        var delivBtn = document.createElement('a');
+        delivBtn.href = product.delivery.stripeLink;
+        delivBtn.target = '_blank'; delivBtn.rel = 'noopener noreferrer';
+        delivBtn.className = 'btn-order-delivery';
+        var dLabel = document.createElement('span'); dLabel.className = 'option-label';
+        dLabel.innerHTML = '🚚 Delivery<span class="delivery-rec-tag">Recommended</span>';
+        var dPrice = document.createElement('span'); dPrice.className = 'option-price';
+        dPrice.textContent = product.delivery.price || '';
+        delivBtn.appendChild(dLabel); delivBtn.appendChild(dPrice);
+        optionsWrap.appendChild(delivBtn);
+      }
+
+      // Pickup button (secondary)
+      if (product.pickup && product.pickup.stripeLink) {
+        var pickupBtn = document.createElement('a');
+        pickupBtn.href = product.pickup.stripeLink;
+        pickupBtn.target = '_blank'; pickupBtn.rel = 'noopener noreferrer';
+        pickupBtn.className = 'btn-order-pickup';
+        var pLabel = document.createElement('span'); pLabel.className = 'option-label';
+        pLabel.textContent = '🛍 Pickup';
+        var pPrice = document.createElement('span'); pPrice.className = 'option-price';
+        pPrice.textContent = product.pickup.price || '';
+        pickupBtn.appendChild(pLabel); pickupBtn.appendChild(pPrice);
+        optionsWrap.appendChild(pickupBtn);
+      }
+
+      if (optionsWrap.children.length) body.appendChild(optionsWrap);
     } else {
       var badge = document.createElement('span');
       badge.className = 'badge-sold-out'; badge.textContent = 'Sold Out';
@@ -1201,7 +1315,7 @@ function initAdminControls() {
 
   reattach('btn-add-product', function() {
     appData.products = appData.products || [];
-    appData.products.push({ name:'', description:'', price:'$6.99', stripeLink:'', stripeLinkId:'', quantity:null, imageUrl:'', inStock:true });
+    appData.products.push({ name:'', description:'', quantity:null, imageUrl:'', inStock:true, pickup:{ price:'$6.99', stripeLink:'', stripeLinkId:'' }, delivery:{ price:'$9.99', stripeLink:'', stripeLinkId:'' } });
     renderAdminList(appData.products);
     var list = document.getElementById('admin-products-list');
     list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -1321,16 +1435,8 @@ function renderAdminList(prods) {
 
     // Name
     fields.appendChild(makeField('Name', 'name', 'input', 'text', product.name, 'e.g. Sourdough Boule'));
-    // Price
-    fields.appendChild(makeField('Price', 'price', 'input', 'text', product.price, '$6.99'));
     // Description
     fields.appendChild(makeField('Description', 'description', 'textarea', null, product.description, 'A short description…', true));
-    // Stripe Link
-    fields.appendChild(makeField('Stripe Payment Link', 'stripeLink', 'input', 'url', product.stripeLink, 'https://buy.stripe.com/…', true));
-    // Stripe Link ID
-    var idField = makeField('Stripe Link ID', 'stripeLinkId', 'input', 'text', product.stripeLinkId || '', 'plink_…', false);
-    idField.appendChild(makeHint('Find in Stripe Dashboard → Payment Links → click the link → copy the plink_… from the page URL. Required for auto-inventory.'));
-    fields.appendChild(idField);
     // Quantity
     var qtyField = makeField('Quantity (blank = unlimited)', 'quantity', 'input', 'number', product.quantity !== null && product.quantity !== undefined ? String(product.quantity) : '', 'e.g. 5');
     qtyField.querySelector('input').min = '0';
@@ -1345,6 +1451,42 @@ function renderAdminList(prods) {
     fields.appendChild(instockWrap);
 
     card.appendChild(fields);
+
+    // ── Pickup section ──
+    var pickup = product.pickup || {};
+    var pickupSection = document.createElement('div');
+    pickupSection.className = 'admin-fulfillment-section';
+    var pickupLabel = document.createElement('div');
+    pickupLabel.className = 'admin-fulfillment-label';
+    pickupLabel.textContent = '🛍 Pickup';
+    pickupSection.appendChild(pickupLabel);
+    var pickupFields = document.createElement('div');
+    pickupFields.className = 'admin-fields';
+    pickupFields.appendChild(makeField('Pickup Price', 'pickup_price', 'input', 'text', pickup.price || '$6.99', '$6.99'));
+    pickupFields.appendChild(makeField('Pickup Stripe Link', 'pickup_stripeLink', 'input', 'url', pickup.stripeLink || '', 'https://buy.stripe.com/…'));
+    var pickupIdField = makeField('Pickup Stripe Link ID', 'pickup_stripeLinkId', 'input', 'text', pickup.stripeLinkId || '', 'plink_…');
+    pickupIdField.appendChild(makeHint('Stripe Dashboard → Payment Links → click the link → copy plink_… from the URL'));
+    pickupFields.appendChild(pickupIdField);
+    pickupSection.appendChild(pickupFields);
+    card.appendChild(pickupSection);
+
+    // ── Delivery section ──
+    var delivery = product.delivery || {};
+    var delivSection = document.createElement('div');
+    delivSection.className = 'admin-fulfillment-section';
+    var delivLabel = document.createElement('div');
+    delivLabel.className = 'admin-fulfillment-label';
+    delivLabel.textContent = '🚚 Delivery';
+    delivSection.appendChild(delivLabel);
+    var delivFields = document.createElement('div');
+    delivFields.className = 'admin-fields';
+    delivFields.appendChild(makeField('Delivery Price', 'delivery_price', 'input', 'text', delivery.price || '$9.99', '$9.99'));
+    delivFields.appendChild(makeField('Delivery Stripe Link', 'delivery_stripeLink', 'input', 'url', delivery.stripeLink || '', 'https://buy.stripe.com/…'));
+    var delivIdField = makeField('Delivery Stripe Link ID', 'delivery_stripeLinkId', 'input', 'text', delivery.stripeLinkId || '', 'plink_…');
+    delivIdField.appendChild(makeHint('Stripe Dashboard → Payment Links → click the link → copy plink_… from the URL'));
+    delivFields.appendChild(delivIdField);
+    delivSection.appendChild(delivFields);
+    card.appendChild(delivSection);
 
     // ── Image upload ──
     var imgSection = document.createElement('div');
@@ -1433,14 +1575,21 @@ function readAdminForm() {
     var qty    = (qtyRaw === '' || qtyRaw === null || qtyRaw === undefined) ? null : parseInt(qtyRaw, 10);
     if (isNaN(qty)) qty = null;
     prods.push({
-      name:         (card.querySelector('[name="name"]') || {}).value || '',
-      description:  (card.querySelector('[name="description"]') || {}).value || '',
-      price:        (card.querySelector('[name="price"]') || {}).value || '$6.99',
-      stripeLink:   (card.querySelector('[name="stripeLink"]') || {}).value || '',
-      stripeLinkId: (card.querySelector('[name="stripeLinkId"]') || {}).value || '',
-      quantity:     qty,
-      imageUrl:     (card.querySelector('[name="imageUrl"]') || {}).value || '',
-      inStock:      !!(card.querySelector('[name="inStock"]') || {}).checked
+      name:        (card.querySelector('[name="name"]') || {}).value || '',
+      description: (card.querySelector('[name="description"]') || {}).value || '',
+      quantity:    qty,
+      imageUrl:    (card.querySelector('[name="imageUrl"]') || {}).value || '',
+      inStock:     !!(card.querySelector('[name="inStock"]') || {}).checked,
+      pickup: {
+        price:        (card.querySelector('[name="pickup_price"]') || {}).value || '$6.99',
+        stripeLink:   (card.querySelector('[name="pickup_stripeLink"]') || {}).value || '',
+        stripeLinkId: (card.querySelector('[name="pickup_stripeLinkId"]') || {}).value || ''
+      },
+      delivery: {
+        price:        (card.querySelector('[name="delivery_price"]') || {}).value || '$9.99',
+        stripeLink:   (card.querySelector('[name="delivery_stripeLink"]') || {}).value || '',
+        stripeLinkId: (card.querySelector('[name="delivery_stripeLinkId"]') || {}).value || ''
+      }
     });
   });
   return prods;
