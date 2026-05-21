@@ -27,7 +27,7 @@
     {
       "name": "Lemon Bar",
       "description": "This is a delicious, tangy, lemon bar perfect for hot weather!",
-      "quantity": 14,
+      "quantity": 13,
       "imageUrl": "/images/1779338282808-untitled-design--8-.png",
       "inStock": true,
       "tags": [
