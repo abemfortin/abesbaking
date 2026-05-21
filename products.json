@@ -23,6 +23,29 @@
         "stripeLink": "https://buy.stripe.com/14A5kDc0wdWogUdd155kk0h",
         "stripeLinkId": "plink_1TXJisEzqlY9gRMcl4bMq3mq"
       }
+    },
+    {
+      "name": "Lemon Bar",
+      "description": "This is a delicious, tangy, lemon bar perfect for hot weather!",
+      "quantity": 16,
+      "imageUrl": "/images/1779338282808-untitled-design--8-.png",
+      "inStock": true,
+      "tags": [
+        "nut-free",
+        "contains-gluten",
+        "contains-dairy",
+        "contains-eggs"
+      ],
+      "pickup": {
+        "price": "$3.99",
+        "stripeLink": "https://buy.stripe.com/bJeaEX5C8bOgdI1e595kk0j",
+        "stripeLinkId": "plink_1TZOKJEzqlY9gRMcyhMVlCVW"
+      },
+      "delivery": {
+        "price": "$5.99",
+        "stripeLink": "https://buy.stripe.com/14A00j8Ok8C4bzT7GL5kk0k",
+        "stripeLinkId": "plink_1TZOM3EzqlY9gRMcx9uDBN1r"
+      }
     }
   ]
 }
