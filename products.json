@@ -25,26 +25,21 @@
       }
     },
     {
-      "name": "Lemon Bar",
-      "description": "This is a delicious, tangy, lemon bar perfect for hot weather!",
-      "quantity": 3,
-      "imageUrl": "/images/1779338282808-untitled-design--8-.png",
+      "name": "Chocolate Chip Cookie",
+      "description": "A large bakery-style cookie with caramelized crispy edges and a soft, gooey center. Made with dark chocolate chunks and finished with flaky sea salt.",
+      "quantity": 13,
+      "imageUrl": "/images/1779498943716-untitled-design--11-.png",
       "inStock": true,
-      "tags": [
-        "nut-free",
-        "contains-gluten",
-        "contains-dairy",
-        "contains-eggs"
-      ],
+      "tags": [],
       "pickup": {
-        "price": "$3.99",
-        "stripeLink": "https://buy.stripe.com/bJeaEX5C8bOgdI1e595kk0j",
-        "stripeLinkId": "plink_1TZOKJEzqlY9gRMcyhMVlCVW"
+        "price": "$4.99",
+        "stripeLink": "https://buy.stripe.com/4gM00jd4A8C433n8KP5kk0l",
+        "stripeLinkId": "plink_1Ta44AEzqlY9gRMcBedXsJG3"
       },
       "delivery": {
-        "price": "$5.99",
-        "stripeLink": "https://buy.stripe.com/14A00j8Ok8C4bzT7GL5kk0k",
-        "stripeLinkId": "plink_1TZOM3EzqlY9gRMcx9uDBN1r"
+        "price": "$6.99",
+        "stripeLink": "https://buy.stripe.com/eVq5kD8OkcSk0Vfgdh5kk0m",
+        "stripeLinkId": "plink_1Ta49vEzqlY9gRMcNCdL7aGz"
       }
     }
   ]
