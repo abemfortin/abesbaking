@@ -1,46 +1,4 @@
 {
-  "shopClosed": false,
-  "products": [
-    {
-      "name": "Chocolate Chip Cookie",
-      "description": "A large bakery-style cookie with caramelized crispy edges and a soft, gooey center. Made with dark chocolate chunks and finished with flaky sea salt.",
-      "quantity": 13,
-      "imageUrl": "/images/1779498943716-untitled-design--11-.png",
-      "inStock": true,
-      "tags": [],
-      "pickup": {
-        "price": "$4.99",
-        "stripeLink": "https://buy.stripe.com/4gM00jd4A8C433n8KP5kk0l",
-        "stripeLinkId": "plink_1Ta44AEzqlY9gRMcBedXsJG3"
-      },
-      "delivery": {
-        "price": "$6.99",
-        "stripeLink": "https://buy.stripe.com/eVq5kD8OkcSk0Vfgdh5kk0m",
-        "stripeLinkId": "plink_1Ta49vEzqlY9gRMcNCdL7aGz"
-      }
-    },
-    {
-      "name": "Peanut Butter Marshmallow Brownies",
-      "description": "These brownies start with a rich, from-scratch chocolate base and get swirled with creamy peanut butter and marshmallow before baking.",
-      "quantity": null,
-      "imageUrl": "/images/1778844796534-untitled-design--6-.png",
-      "inStock": true,
-      "tags": [
-        "contains-gluten",
-        "contains-dairy",
-        "contains-eggs",
-        "contains-nuts"
-      ],
-      "pickup": {
-        "price": "$4.99",
-        "stripeLink": "https://buy.stripe.com/28EaEXe8EbOg1Zj8KP5kk0i",
-        "stripeLinkId": "plink_1TXJmVEzqlY9gRMcKYmMqN9P"
-      },
-      "delivery": {
-        "price": "$6.98",
-        "stripeLink": "https://buy.stripe.com/14A5kDc0wdWogUdd155kk0h",
-        "stripeLinkId": "plink_1TXJisEzqlY9gRMcl4bMq3mq"
-      }
-    }
-  ]
+  "shopClosed": true,
+  "products": []
 }
