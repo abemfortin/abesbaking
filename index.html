@@ -1049,6 +1049,102 @@
   gap: 0.4rem;
 }
 
+    /* ── Previously available gallery (shop closed) ── */
+    .gallery-section { margin-top: 2rem; }
+    .gallery-section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.02em;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 0.65rem;
+    }
+    .gallery-item {
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 10px;
+      background: var(--cream-dark);
+      display: block;
+    }
+    .gallery-item img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 0.35s ease;
+    }
+    .gallery-item:hover img { transform: scale(1.06); }
+
+    /* ── Admin gallery manager ── */
+    .admin-gallery-manager {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 1.5rem 0.5rem;
+    }
+    .admin-gallery-card {
+      background: #fafafa;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+    .admin-gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .admin-gallery-header-text strong {
+      font-size: 0.88rem;
+      color: var(--navy-dark);
+      display: block;
+    }
+    .admin-gallery-header-text span {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+    }
+    .admin-gallery-thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .admin-gallery-thumb {
+      position: relative;
+      width: 76px; height: 76px;
+      border-radius: 7px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--cream-dark);
+    }
+    .admin-gallery-thumb img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .admin-gallery-thumb-remove {
+      position: absolute; top: 3px; right: 3px;
+      background: rgba(0,0,0,0.55); color: #fff;
+      border: none; border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 12px; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; font-family: inherit;
+    }
+    .admin-gallery-thumb-remove:hover { background: rgba(180,40,40,0.85); }
+    .admin-gallery-pending-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.45); color: #fff;
+      font-size: 0.55rem; font-weight: 700; text-align: center;
+      padding: 2px 4px; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .admin-gallery-empty {
+      font-size: 0.8rem; color: var(--text-muted); font-style: italic;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 780px) {
       .about-grid {
@@ -1115,6 +1211,7 @@
         </div>
       </div>
     </div>
+    <div id="admin-gallery-manager" class="admin-gallery-manager"></div>
     <div id="admin-library-panel" style="display:none;max-width:860px;margin:0 auto;padding:0 1.5rem 0.5rem;"></div>
     <div class="admin-products-list" id="admin-products-list"></div>
     <div class="admin-save-notice" id="admin-save-notice">✓ Menu saved!</div>
@@ -1154,6 +1251,10 @@
         <span class="closed-icon">🍪</span>
         <h3>Not taking orders right now</h3>
         <p>Check back soon — or follow <a href="https://instagram.com/abesbaking" target="_blank" rel="noopener noreferrer">@abesbaking</a> for updates.</p>
+      </div>
+      <div id="gallery-section" style="display:none;" class="gallery-section">
+        <p class="gallery-section-title">Previously Available</p>
+        <div class="gallery-grid" id="gallery-grid"></div>
       </div>
       <div class="products-grid" id="products-grid" role="list"><p class="products-loading" id="products-loading">Loading menu…</p></div>
     </section>
@@ -1235,9 +1336,10 @@ function removeFromLibrary(name) {
   localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(filtered));
 }
 
-var currentFileSha = null;
-var pendingImages  = {}; // { cardIndex (string) -> File }
-var appData        = null;
+var currentFileSha       = null;
+var pendingImages        = {}; // { cardIndex (string) -> File }
+var pendingGalleryImages = []; // File[] — queued gallery uploads
+var appData              = null;
 
 var isAdmin = new URLSearchParams(window.location.search).has('admin');
 
@@ -1277,14 +1379,14 @@ function isAvailable(product) {
 }
 
 // ── GitHub push ───────────────────────────────────────────────────────────
-function generateData(prods, closed) {
-  return JSON.stringify({ shopClosed: closed, products: prods }, null, 2);
+function generateData(prods, closed, gallery) {
+  return JSON.stringify({ shopClosed: closed, gallery: gallery || [], products: prods }, null, 2);
 }
 
-function pushToGithub(prods, closed, onSuccess, onError) {
+function pushToGithub(prods, closed, gallery, onSuccess, onError) {
   var token = getGithubToken();
   if (!token) { onError('No GitHub token.'); return; }
-  var encoded = btoa(unescape(encodeURIComponent(generateData(prods, closed))));
+  var encoded = btoa(unescape(encodeURIComponent(generateData(prods, closed, gallery))));
   fetch(PRODUCTS_API, {
     method: 'PUT',
     headers: { 'Authorization': authHeader(token), 'Content-Type': 'application/json' },
@@ -1446,11 +1548,28 @@ function renderStorefront(data) {
 
   grid.innerHTML = '';
 
+  var gallerySection = document.getElementById('gallery-section');
+  var galleryGrid    = document.getElementById('gallery-grid');
+
   if (data.shopClosed) {
     banner.style.display = 'block';
     grid.style.display   = 'none';
+    // Render previously-available gallery
+    if (data.gallery && data.gallery.length && gallerySection && galleryGrid) {
+      galleryGrid.innerHTML = '';
+      data.gallery.forEach(function(url) {
+        var item = document.createElement('div'); item.className = 'gallery-item';
+        var img  = document.createElement('img');
+        img.src = url; img.alt = ''; img.loading = 'lazy';
+        item.appendChild(img); galleryGrid.appendChild(item);
+      });
+      gallerySection.style.display = 'block';
+    } else if (gallerySection) {
+      gallerySection.style.display = 'none';
+    }
     return;
   }
+  if (gallerySection) gallerySection.style.display = 'none';
   banner.style.display = 'none';
 
   if (!data.products || !data.products.length) {
@@ -1649,6 +1768,73 @@ function renderStorefront(data) {
   });
 }
 
+// ── Admin gallery manager ─────────────────────────────────────────────────
+function renderAdminGallery() {
+  var container = document.getElementById('admin-gallery-manager');
+  if (!container) return;
+  container.innerHTML = '';
+
+  var card = document.createElement('div'); card.className = 'admin-gallery-card';
+
+  // Header row
+  var header = document.createElement('div'); header.className = 'admin-gallery-header';
+  var headerText = document.createElement('div'); headerText.className = 'admin-gallery-header-text';
+  var strong = document.createElement('strong'); strong.textContent = 'Closed Shop Gallery';
+  var sub = document.createElement('span'); sub.textContent = 'Photos shown to visitors when your shop is closed. Square-cropped automatically.';
+  headerText.appendChild(strong); headerText.appendChild(sub);
+
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.multiple = true; fileInput.style.display = 'none';
+  var addBtn = document.createElement('button');
+  addBtn.className = 'btn-img-upload'; addBtn.type = 'button'; addBtn.textContent = '+ Add Photos';
+  addBtn.addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function() {
+    if (!this.files || !this.files.length) return;
+    Array.from(this.files).forEach(function(f) { pendingGalleryImages.push(f); });
+    this.value = '';
+    renderAdminGallery();
+  });
+
+  header.appendChild(headerText);
+  header.appendChild(addBtn);
+  header.appendChild(fileInput);
+  card.appendChild(header);
+
+  var gallery = appData.gallery || [];
+  if (!gallery.length && !pendingGalleryImages.length) {
+    var empty = document.createElement('p'); empty.className = 'admin-gallery-empty';
+    empty.textContent = 'No photos yet — add some to show visitors what you\'ve baked before.';
+    card.appendChild(empty);
+  } else {
+    var thumbs = document.createElement('div'); thumbs.className = 'admin-gallery-thumbs';
+
+    // Existing images
+    gallery.forEach(function(url, gi) {
+      var wrap = document.createElement('div'); wrap.className = 'admin-gallery-thumb';
+      var img = document.createElement('img'); img.src = url; img.alt = '';
+      var rm = document.createElement('button'); rm.className = 'admin-gallery-thumb-remove'; rm.type = 'button'; rm.textContent = '×';
+      rm.addEventListener('click', function() { appData.gallery.splice(gi, 1); renderAdminGallery(); });
+      wrap.appendChild(img); wrap.appendChild(rm); thumbs.appendChild(wrap);
+    });
+
+    // Pending (preview only, uploaded on Save)
+    pendingGalleryImages.forEach(function(file, pi) {
+      var wrap = document.createElement('div'); wrap.className = 'admin-gallery-thumb';
+      wrap.style.outline = '2px dashed var(--navy)';
+      var img = document.createElement('img'); img.alt = file.name;
+      var reader = new FileReader(); reader.onload = function(e) { img.src = e.target.result; }; reader.readAsDataURL(file);
+      var rm = document.createElement('button'); rm.className = 'admin-gallery-thumb-remove'; rm.type = 'button'; rm.textContent = '×';
+      rm.addEventListener('click', function() { pendingGalleryImages.splice(pi, 1); renderAdminGallery(); });
+      var lbl = document.createElement('div'); lbl.className = 'admin-gallery-pending-label'; lbl.textContent = 'Pending';
+      wrap.appendChild(img); wrap.appendChild(rm); wrap.appendChild(lbl); thumbs.appendChild(wrap);
+    });
+
+    card.appendChild(thumbs);
+  }
+
+  container.appendChild(card);
+}
+
 // ── Admin panel ───────────────────────────────────────────────────────────
 function buildAdminPanel() {
   document.getElementById('admin-panel').style.display = 'block';
@@ -1706,7 +1892,10 @@ function showTokenSetup(isUpdate) {
 
 function initAdminControls() {
   if (!appData) return;
-  pendingImages = {};
+  pendingImages        = {};
+  pendingGalleryImages = [];
+  if (!appData.gallery) appData.gallery = [];
+  renderAdminGallery();
 
   var toggle = document.getElementById('shop-closed-toggle');
   toggle.checked = !!appData.shopClosed;
@@ -1791,7 +1980,7 @@ function initAdminControls() {
     btn.disabled = true; btn.textContent = 'Saving…';
     notice.style.display = 'none';
 
-    // Collect pending image uploads
+    // Collect pending product image uploads
     var uploadTasks = [];
     Object.keys(pendingImages).forEach(function(idx) {
       var file = pendingImages[idx];
@@ -1804,18 +1993,31 @@ function initAdminControls() {
       }));
     });
 
+    // Collect pending gallery image uploads
+    pendingGalleryImages.forEach(function(file) {
+      uploadTasks.push(new Promise(function(resolve, reject) {
+        uploadImageToGithub(file, token, function(path) {
+          appData.gallery = appData.gallery || [];
+          appData.gallery.push(path);
+          resolve();
+        }, function(e) { reject(e); });
+      }));
+    });
+
     Promise.all(uploadTasks)
       .then(function() {
-        pendingImages = {};
+        pendingImages        = {};
+        pendingGalleryImages = [];
         return new Promise(function(resolve, reject) {
-          pushToGithub(prods, closed, resolve, reject);
+          pushToGithub(prods, closed, appData.gallery || [], resolve, reject);
         });
       })
       .then(function() {
-        appData.products  = prods;
+        appData.products   = prods;
         appData.shopClosed = closed;
         renderStorefront(appData);
         renderAdminList(prods);
+        renderAdminGallery();
         btn.disabled = false; btn.textContent = 'Save Changes';
         notice.className = 'admin-save-notice success';
         notice.textContent = '✓ Saved! Website updates in ~1 minute.';
@@ -1833,7 +2035,7 @@ function initAdminControls() {
   reattach('btn-export-products', function() {
     var prods  = readAdminForm();
     var closed = document.getElementById('shop-closed-toggle').checked;
-    var blob = new Blob([generateData(prods, closed)], { type: 'application/json' });
+    var blob = new Blob([generateData(prods, closed, appData.gallery || [])], { type: 'application/json' });
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click();
     setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
   });
