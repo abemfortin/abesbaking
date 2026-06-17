@@ -1,23 +1,5 @@
 {
-  "shopClosed": false,
-  "products": [
-    {
-      "name": "Pistachio Chocolate Chip Cookie",
-      "description": "A large bakery-style cookie with caramelized crispy edges and a soft, gooey center. Made with dark chocolate chunks and pistachio pieces, finished with flaky sea salt.",
-      "quantity": null,
-      "imageUrl": "/images/1780533641503--4.99.png",
-      "inStock": true,
-      "tags": [],
-      "pickup": {
-        "price": "$4",
-        "stripeLink": "https://buy.stripe.com/14A00jd4A8C49rLe595kk0n",
-        "stripeLinkId": "plink_1TePIOEzqlY9gRMcls2oeL63"
-      },
-      "delivery": {
-        "price": "* Not Available *",
-        "stripeLink": "",
-        "stripeLinkId": ""
-      }
-    }
-  ]
+  "shopClosed": true,
+  "gallery": [],
+  "products": []
 }
