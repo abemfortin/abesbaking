@@ -1,5 +1,24 @@
 {
   "shopClosed": true,
   "gallery": [],
-  "products": []
+  "products": [
+    {
+      "name": "Everything Bagel 2-Pack",
+      "description": "",
+      "quantity": 2,
+      "imageUrl": "/images/1786035852374-img-9555.jpg",
+      "inStock": true,
+      "tags": [],
+      "pickup": {
+        "price": "$9.99",
+        "stripeLink": "https://buy.stripe.com/14A4gzd4A3hKcDX7GL5kk0o",
+        "stripeLinkId": "plink_1U1UgzEzqlY9gRMc0EmGXCJm"
+      },
+      "delivery": {
+        "price": "$9.99",
+        "stripeLink": "",
+        "stripeLinkId": ""
+      }
+    }
+  ]
 }
